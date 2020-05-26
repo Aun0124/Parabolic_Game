@@ -15,11 +15,14 @@ import javafx.animation.PathTransition;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Orientation;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -33,6 +36,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javax.swing.UIManager;
+import static javax.swing.text.StyleConstants.Background;
 
 /**
  *
@@ -51,11 +56,11 @@ public class Shootarrow extends Application {
     double timeIncrement;
     double xIncrement;
     double angle;
-    int anglesubstract=1;
+    int anglesubstract = 1;
 
     public static final double ACCELERATION = -9.81;
-    private Image stickman, arrowimage, background;
-    private Node arrow, Background;
+    private Image arrowimage, background;
+    private Node body,hands,bow,arrow;
     private ArrayList<Node> arrows = new ArrayList<Node>();
     private Group board;
     Text healthtext;
@@ -65,20 +70,36 @@ public class Shootarrow extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         //  Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
-
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         arrowimage = new Image("arrow.jpeg");
-        
-
+        arrow=new ImageView(arrowimage);
+        body= new ImageView(new Image("body.jpeg"));
+        hands=new ImageView(new Image("hands.jpeg"));
+        bow=new ImageView(new Image("bow.jpeg"));
         ImagePattern pattern = new ImagePattern(new Image("background.jpeg"));
-
+        ScrollBar sc=new ScrollBar();
+        
         board = new Group();
         healthtext = new Text(50, 50, "Health: " + health);
-        healthtext.setFont(Font.font("verdana",20));
-        board.getChildren().addAll(healthtext);// add stickman
+        healthtext.setFont(Font.font("verdana", 20));
+        board.getChildren().addAll(sc,healthtext,body,hands,bow,arrow);// add stickman
+         // ScrollPane pane=new ScrollPane(board);
 
-        scene = new Scene(board, Screen.getMainScreen().getWidth()*0.9, Screen.getMainScreen().getHeight()*0.8);
+        scene = new Scene(board, Screen.getMainScreen().getWidth() * 0.9, Screen.getMainScreen().getHeight() * 0.8);
         scene.setFill(pattern);
-       
+        arrow.relocate(x+140, scene.getHeight() / 1.55 - y);arrow.rotateProperty().set(-20);
+        body.relocate(x+50, scene.getHeight() / 2.2 - y);
+        hands.relocate( x + 78, scene.getHeight() / 1.6 - y);
+        bow.relocate( x + 116, scene.getHeight() / 1.78 - y);
+        sc.setLayoutY(scene.getHeight()-5);
+        sc.setPrefWidth(scene.getWidth()+10);
+        sc.setFocusTraversable(true);
+        sc.setMin(0);
+        sc.setMax(100);
+        sc.setValue(20);
+        sc.setOrientation(Orientation.HORIZONTAL);
+        sc.setPrefHeight(15);
+        
         scene.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -93,14 +114,14 @@ public class Shootarrow extends Application {
                     int steps = 35;
                     xVelocity = velocity * Math.cos(angle);
                     yVelocity = velocity * Math.sin(angle);
-                    totalTime = -2.0 * yVelocity / ACCELERATION;
+                    double finalv=Math.sqrt((Math.pow(yVelocity, 2)+2.0*ACCELERATION*(-50)));
+                    totalTime = (-1.0 * finalv -yVelocity) / ACCELERATION;
                     timeIncrement = totalTime / steps;
                     xIncrement = xVelocity * timeIncrement;
-                    
 
                     ImageView anarrow = new ImageView(arrowimage);
                     Node newarrow = anarrow;
-                    newarrow.relocate(x + 50, scene.getHeight() / 1.4 - y);
+                    newarrow.relocate(x+140, scene.getHeight() / 1.55 - y);
                     arrows.add(newarrow);// maybe no need this line
                     board.getChildren().add(newarrow);
                     shooting = true;
@@ -117,11 +138,11 @@ public class Shootarrow extends Application {
                     t += timeIncrement;
                     x += xIncrement;
                     y = yVelocity * t + 0.5 * ACCELERATION * t * t;
-                     anglesubstract=(int) ((int)(Math.toDegrees(angle))*(t/totalTime)*2);
-                  
+                    anglesubstract = (int) ((int) (Math.toDegrees(angle)) * (t / totalTime) * 2);
+
                     projectilemotion();
                     System.out.println("\t" + round(x) + "\t" + round(y) + "\t" + round(t));
-                    if ((int) y <= 0) {
+                    if (round (y) <= -50) {
                         shooting = false;
                     }
                 }
@@ -141,8 +162,8 @@ public class Shootarrow extends Application {
     }
 
     private void projectilemotion() {
-        arrows.get(arrows.size() - 1).relocate(x + 50, scene.getHeight() / 1.4 - y);
-        arrows.get(arrows.size() - 1).rotateProperty().setValue(Math.toDegrees(-angle)+anglesubstract);
+        arrows.get(arrows.size() - 1).relocate(x+140, scene.getHeight() / 1.55 - y);
+        arrows.get(arrows.size() - 1).rotateProperty().setValue(Math.toDegrees(-angle) + anglesubstract);
     }
 
     /**
